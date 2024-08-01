@@ -1,0 +1,512 @@
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates
+├── analysis_results.html
+├── base.html
+├── contact.html
+├── error_tiktok.html
+├── home.html
+├── partials
+│   ├── footer.html
+│   └── headers.html
+├── privacy_policy.html
+├── profile
+│   ├── analyses.html
+│   ├── profile_info.html
+│   └── videos.html
+├── profile.html
+├── registration
+│   ├── login.html
+│   └── register.html
+└── terms_of_service.html
+
+4 directories, 15 files
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/profile.html:
+
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-8 profile-content">
+    <section class="profile-info mb-8 flex items-center justify-between" style="border-bottom: 1px solid #e5e7eb; padding-bottom: 20px;">
+        <div class="flex items-center space-x-4">
+            <img class="avatar rounded-full" src="{{ user_info.avatar_url }}" alt="Avatar" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div class="flex flex-col">
+                <h2 style="font-size: 1.875rem; font-weight: bold; color: #1a73e8;">{{ user_info.display_name }}</h2>
+                <p style="font-size: 0.875rem; font-weight: 500; color: #6b7280; margin-top: 4px;">{{ user_info.username }}</p>
+            </div>
+        </div>
+        <form action="{% url 'process_metrics' %}" method="post" id="processMetricsForm">
+            {% csrf_token %}
+            <button type="submit" style="padding: 10px 20px; font-size: 1rem; font-weight: 600; background-color: #1a73e8; color: #fff; border: none; border-radius: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: background-color 0.3s ease;">Analyze Virality Patterns</button>
+        </form>
+    </section>
+    <section class="videos">
+        <h2 class="text-2xl font-bold mb-4 text-primary">Videos</h2>
+        {% for video in videos %}
+            <div class="video-card bg-light rounded-lg shadow-md p-4 mb-6 flex" style="border: 1px solid #e5e7eb; transition: box-shadow 0.3s ease;">
+                <div class="flex items-center">
+                    <img class="cover-image rounded-lg mr-4 h-full" src="{{ video.cover_image_url }}" alt="Cover Image" style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px;">
+                </div>
+                <div class="video-card-content flex-grow" style="padding-left: 20px;">
+                    <h3 class="text-xl font-bold mb-2 text-primary">{{ video.title }}</h3>
+                    <div class="video-card-details text-dark">
+                        <p>Views: {{ video.view_count }}</p>
+                        <p>Likes: {{ video.like_count }}</p>
+                        <p>Comments: {{ video.comment_count }}</p>
+                        <p>Shares: {{ video.share_count }}</p>
+                        <p>Duration: {{ video.duration }} seconds</p>
+                        <p><a href="{{ video.video_url }}" target="_blank" class="text-blue-500" style="color: #1a73e8; text-decoration: none; transition: color 0.3s ease;">Watch Video</a></p>
+                        {% if video.visual_description %}
+                            <h4 class="text-lg font-semibold mt-2 text-primary">Visual Description:</h4>
+                            <ul class="list-disc list-inside text-left">
+                                {% for description in video.visual_description.description %}
+                                    <li>{{ description }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-gray-500">Visual description not available. Please analyze virality patterns to process video.</p>
+                        {% endif %}
+                        {% if video.transcript %}
+                            <h4 class="text-lg font-semibold mt-2 text-primary">Transcript:</h4>
+                            <p>{{ video.transcript }}</p>
+                        {% else %}
+                            <p class="text-gray-500">Transcript not available or no speech in this post. Please analyze virality patterns to process video.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+    <section class="analyses">
+        <h2 class="text-2xl font-bold mb-4 text-primary">Analyses</h2>
+        {% for analysis in analyses %}
+            <div class="analysis-card bg-light rounded-lg shadow-md p-4 mb-6" style="border: 1px solid #e5e7eb;">
+                <h3 class="text-xl font-bold mb-2 text-primary">Analysis on {{ analysis.video_count }} videos</h3>
+                <a href="{% url 'analysis_results' analysis.id %}" class="text-blue-500 hover:underline">Details</a>
+                {% for insight in analysis.get_insights.insights %}
+                    <div class="insight mb-4">
+                        <h4 class="text-lg font-semibold mt-2 text-primary">Pattern: {{ insight.pattern }}</h4>
+                        <div class="contributing-factors">
+                            <h5 class="text-md font-semibold mt-2 text-primary">Contributing Factors:</h5>
+                            <ul class="list-disc list-inside text-left">
+                                {% for factor in insight.factors.contributing %}
+                                    <li>{{ factor }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="detracting-factors">
+                            <h5 class="text-md font-semibold mt-2 text-primary">Detracting Factors:</h5>
+                            <ul class="list-disc list-inside text-left">
+                                {% for factor in insight.factors.detracting %}
+                                    <li>{{ factor }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </section>
+</div>
+<script src="{% static 'js/scripts.js' %}"></script>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/home.html:
+
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="home-content text-center bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-4xl font-bold text-primary mb-4">Welcome to Social Insights Lab</h1>
+    <div class="flex justify-center p-4"> <!-- Added p-4 for padding -->
+        {% if user.is_authenticated %}
+            <a class="btn bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark m-2" href="{% url 'authorize' %}">Authorize & Update Tiktok Data</a>
+        {% else %}
+            <a class="btn bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark m-2" href="{% url 'login' %}">Login</a>
+            <a class="btn bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark m-2" href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/base.html:
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Social Insights Lab{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-primary text-white py-4">
+        <div class="container mx-auto flex justify-between items-center px-4">
+            <a href="{% url 'home' %}" class="flex items-center">
+                <img src="{% static 'images/Logo_2024.svg' %}" alt="Social Insights Lab Logo" class="logo">
+            </a>
+            <nav class="flex-grow">
+                <ul class="flex justify-end space-x-4 items-center">
+                    <li><a href="{% url 'home' %}" class="nav-link hover:underline">Home</a></li>
+                    {% if user.is_authenticated %}
+                        {% if request.session.access_token %}
+                            <li><a href="{% url 'profile' %}" class="nav-link hover:underline">Profile</a></li>
+                        {% else %}
+                            <li><a href="{% url 'authorize' %}" class="btn nav-link bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark">Authorize & Update TikTok Data</a></li>
+                        {% endif %}
+                        <li>
+                            <a href="#" class="btn nav-link bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark" onclick="document.getElementById('logout-form').submit();">Logout</a>
+                            <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                                {% csrf_token %}
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><a href="{% url 'register' %}" class="nav-link hover:underline">Register</a></li>
+                        <li><a href="{% url 'login' %}" class="nav-link hover:underline">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main class="flex-grow container mx-auto px-4 py-8 bg-white rounded-lg shadow-md mt-6">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="bg-primary text-white py-4">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2024 Social Insights Lab. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="{% static 'js/scripts.js' %}"></script>
+</body>
+</html>
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/contact.html:
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Contact Us</h1>
+    <p>This is the placeholder for the Contact Us page.</p>
+</div>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/error_tiktok.html:
+
+{% extends 'base.html' %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="error-content">
+    <h2>Error</h2>
+    <p>{{ error }}</p>
+    <a href="{% url 'home' %}" class="btn">Go back to Home</a>
+</div>
+{% endblock %}
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/analysis_results.html:
+
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Analysis Results{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-8">
+    <h2 class="text-2xl font-bold mb-4 text-primary">
+        Analysis on {{ analysis.video_count }} videos 
+        <span class="text-sm font-medium text-gray-500">
+            (Created on {{ analysis.created_at|date:"F j, Y, g:i a" }})
+        </span>
+    </h2>
+    
+    <section class="insights">
+        <h3 class="text-xl font-bold mb-4 text-primary">Insights</h3>
+        {% for insight in insights.insights %}
+            <div class="insight mb-4">
+                <h4 class="text-lg font-semibold mt-2 text-primary">Pattern: {{ insight.pattern }}</h4>
+                <div class="contributing-factors">
+                    <h5 class="text-md font-semibold mt-2 text-primary">Contributing Factors:</h5>
+                    <ul class="list-disc list-inside text-left">
+                        {% for factor in insight.factors.contributing %}
+                            <li>{{ factor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="detracting-factors">
+                    <h5 class="text-md font-semibold mt-2 text-primary">Detracting Factors:</h5>
+                    <ul class="list-disc list-inside text-left">
+                        {% for factor in insight.factors.detracting %}
+                            <li>{{ factor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+
+    <section class="videos">
+        <h3 class="text-xl font-bold mb-4 text-primary">Videos Included in Analysis</h3>
+        {% for video in videos %}
+            <div class="video-card bg-light rounded-lg shadow-md p-4 mb-6 flex" style="border: 1px solid #e5e7eb;">
+                <div class="flex items-center">
+                    <img class="cover-image rounded-lg mr-4 h-full" src="{{ video.cover_image_url }}" alt="Cover Image" style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px;">
+                </div>
+                <div class="video-card-content flex-grow" style="padding-left: 20px;">
+                    <h3 class="text-xl font-bold mb-2 text-primary">{{ video.title }}</h3>
+                    <div class="video-card-details text-dark">
+                        <p>Views: {{ video.view_count }}</p>
+                        <p>Likes: {{ video.like_count }}</p>
+                        <p>Comments: {{ video.comment_count }}</p>
+                        <p>Shares: {{ video.share_count }}</p>
+                        <p>Duration: {{ video.duration }} seconds</p>
+                        <p><a href="{{ video.video_url }}" target="_blank" class="text-blue-500" style="color: #1a73e8; text-decoration: none; transition: color 0.3s ease;">Watch Video</a></p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+</div>
+<script src="{% static 'js/scripts.js' %}"></script>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/privacy_policy.html:
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Privacy Policy</h1>
+    <p>This is the placeholder for the Privacy Policy.</p>
+</div>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/terms_of_service.html:
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Terms of Service</h1>
+    <p>This is the placeholder for the Terms of Service.</p>
+</div>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/registration/register.html:
+
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="register-content text-center bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-4xl font-bold text-primary mb-4">Register</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark">Register</button>
+    </form>
+</div>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/registration/login.html:
+
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="login-content text-center bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-4xl font-bold text-primary mb-4">Login</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label for="username" class="block text-left">Username:</label>
+            <input type="text" id="username" name="username" required class="border border-gray-300 p-2 rounded">
+        </div>
+        <div class="mb-4">
+            <label for="password" class="block text-left">Password:</label>
+            <input type="password" id="password" name="password" required class="border border-gray-300 p-2 rounded">
+        </div>
+        <button type="submit" class="btn bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark">Login</button>
+        {% if error %}
+            <p class="text-red-500">{{ error }}</p>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/profile/videos.html:
+
+<section class="container">
+    <h2>Videos</h2>
+    {% for video in videos %}
+        <div class="neomorph">
+            <img src="{{ video.cover_image_url }}" alt="Cover Image">
+            <div>
+                <h3>{{ video.title }}</h3>
+                <div>
+                    <p>Views: {{ video.view_count }}</p>
+                    <p>Likes: {{ video.like_count }}</p>
+                    <p>Comments: {{ video.comment_count }}</p>
+                    <p>Shares: {{ video.share_count }}</p>
+                    <p>Duration: {{ video.duration }} seconds</p>
+                    <p><a href="{{ video.video_url }}" target="_blank">Watch Video</a></p>
+                    {% if video.visual_description %}
+                        <h4>Visual Description:</h4>
+                        <ul>
+                            {% for description in video.visual_description.description %}
+                                <li>{{ description }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Visual description not available. Please analyze virality patterns to process video.</p>
+                    {% endif %}
+                    {% if video.transcript %}
+                        <h4>Transcript:</h4>
+                        <p>{{ video.transcript }}</p>
+                    {% else %}
+                        <p>Transcript not available or no speech in this post. Please analyze virality patterns to process video.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</section>
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/profile/profile_info.html:
+
+<section class="container neomorph">
+    <div>
+        <img src="{{ user_info.avatar_url }}" alt="Avatar">
+        <div>
+            <h2>{{ user_info.display_name }}</h2>
+            <p>{{ user_info.username }}</p>
+        </div>
+    </div>
+    <form action="{% url 'process_metrics' %}" method="post" id="processMetricsForm">
+        {% csrf_token %}
+        <button type="submit" class="button-neomorph">Analyze Virality Patterns</button>
+    </form>
+</section>
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/profile/analyses.html:
+
+<section class="container">
+    <h2>Analyses</h2>
+    {% for analysis in analyses %}
+        <div class="neomorph">
+            <div>
+                <h3>Analysis on {{ analysis.video_count }} videos</h3>
+                <a href="{% url 'analysis_results' analysis.id %}" class="neomorph">Details</a>
+                {% for insight in analysis.get_insights.insights %}
+                    <div>
+                        <h4>Pattern: {{ insight.pattern }}</h4>
+                        <div>
+                            <h5>Contributing Factors:</h5>
+                            <ul>
+                                {% for factor in insight.factors.contributing %}
+                                    <li>{{ factor }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div>
+                            <h5>Detracting Factors:</h5>
+                            <ul>
+                                {% for factor in insight.factors.detracting %}
+                                    <li>{{ factor }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</section>
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/partials/headers.html:
+
+{% load static %}
+<header>
+    <div class="container">
+        <a href="{% url 'home' %}" aria-label="Social Insights Lab Home">
+            <img src="{% static 'images/Logo_2024.svg' %}" alt="Social Insights Lab Logo" class="logo">
+        </a>
+        <nav aria-label="Main Navigation">
+            <ul>
+                <li><a href="{% url 'home' %}" aria-current="page">Home</a></li>
+                {% if user.is_authenticated %}
+                    {% if request.session.access_token %}
+                        <li><a href="{% url 'profile' %}">Profile</a></li>
+                    {% else %}
+                        <li><a href="{% url 'authorize' %}">Authorize & Update TikTok Data</a></li>
+                    {% endif %}
+                    <li>
+                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                        <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'register' %}">Register</a></li>
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+
+/Users/andresshamis/social_insights_lab/miguelrms/backend/templates/partials/footer.html:
+
+{% load static %}
+<footer role="contentinfo">
+    <div class="container">
+        <p>&copy; 2024 Social Insights Lab. All rights reserved.</p>
+        <nav aria-label="Footer Navigation">
+            <ul>
+                <li><a href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
+                <li><a href="{% url 'terms_of_service' %}">Terms of Service</a></li>
+                <li><a href="{% url 'contact' %}">Contact Us</a></li>
+            </ul>
+        </nav>
+    </div>
+</footer>
+
+
+
